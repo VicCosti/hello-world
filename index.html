@@ -1,12 +1,422 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Page Title</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calorie Tracker Dashboard</title>
+    <style>
+        :root {
+            --primary: #10b981;
+            --primary-hover: #059669;
+            --accent: #f59e0b;
+            --background: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --danger: #ef4444;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--background);
+            color: var(--text-main);
+            line-height: 1.5;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        .card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: var(--text-main);
+        }
+
+        /* Summary Stats */
+        .summary-stats {
+            text-align: center;
+        }
+
+        .progress-circle {
+            position: relative;
+            width: 180px;
+            height: 180px;
+            margin: 1.5rem auto;
+        }
+
+        .progress-circle svg {
+            transform: rotate(-90deg);
+        }
+
+        .progress-circle circle {
+            fill: transparent;
+            stroke-width: 12;
+        }
+
+        .progress-circle .bg {
+            stroke: #e2e8f0;
+        }
+
+        .progress-circle .progress {
+            stroke: var(--primary);
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.5s ease;
+        }
+
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .progress-text .value {
+            font-size: 2rem;
+            font-weight: 800;
+            display: block;
+        }
+
+        .progress-text .label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .stats-detail {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 1.5rem;
+        }
+
+        .stat-item span {
+            display: block;
+        }
+
+        .stat-item .val {
+            font-weight: 700;
+            font-size: 1.125rem;
+        }
+
+        .stat-item .lbl {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        /* Meal List */
+        .meal-list-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .meal-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background-color: #f1f5f9;
+            border-radius: 0.75rem;
+            transition: transform 0.2s;
+        }
+
+        .meal-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .meal-info h3 {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .meal-info p {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .meal-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .meal-calories {
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .btn-delete {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 1.25rem;
+            padding: 0.25rem;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+
+        .btn-delete:hover {
+            opacity: 1;
+        }
+
+        /* Form */
+        .add-meal-form {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .add-meal-form input {
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .add-meal-form input[type="text"] {
+            flex: 2;
+        }
+
+        .add-meal-form input[type="number"] {
+            flex: 1;
+        }
+
+        .btn-add {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-add:hover {
+            background-color: var(--primary-hover);
+        }
+
+        /* Weekly Trend */
+        .trend-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 0.5rem;
+            height: 100px;
+            margin-top: 1rem;
+        }
+
+        .bar {
+            flex: 1;
+            background-color: #e2e8f0;
+            border-radius: 0.25rem;
+            position: relative;
+        }
+
+        .bar.active {
+            background-color: var(--primary);
+        }
+
+        .bar::after {
+            content: attr(data-day);
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.625rem;
+            color: var(--text-muted);
+        }
+
+    </style>
 </head>
 <body>
 
-<h1>My First Heading</h1>
-<p>My first paragraph.</p>
+<div class="container">
+    <header>
+        <h1>Calorie Tracker</h1>
+        <div style="font-weight: 500; color: var(--text-muted);">March 24, 2026</div>
+    </header>
+
+    <div class="dashboard-grid">
+        <!-- Left Column: Summary -->
+        <div class="summary-section">
+            <div class="card summary-stats">
+                <h2>Daily Progress</h2>
+                <div class="progress-circle">
+                    <svg width="180" height="180">
+                        <circle class="bg" cx="90" cy="90" r="80"></circle>
+                        <circle class="progress" id="progress-ring" cx="90" cy="90" r="80"></circle>
+                    </svg>
+                    <div class="progress-text">
+                        <span class="value" id="calories-remaining">2,500</span>
+                        <span class="label">kcal left</span>
+                    </div>
+                </div>
+                <div class="stats-detail">
+                    <div class="stat-item">
+                        <span class="val" id="total-goal">2,500</span>
+                        <span class="lbl">Goal</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="val" id="total-consumed" style="color: var(--primary);">0</span>
+                        <span class="lbl">Consumed</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 2rem;">
+                <h2>Weekly Trend</h2>
+                <div class="trend-chart">
+                    <div class="bar" style="height: 40%;" data-day="Mon"></div>
+                    <div class="bar" style="height: 65%;" data-day="Tue"></div>
+                    <div class="bar" style="height: 50%;" data-day="Wed"></div>
+                    <div class="bar" style="height: 80%;" data-day="Thu"></div>
+                    <div class="bar" style="height: 60%;" data-day="Fri"></div>
+                    <div class="bar" style="height: 45%;" data-day="Sat"></div>
+                    <div class="bar active" style="height: 20%;" data-day="Sun"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Meal Log -->
+        <div class="log-section">
+            <div class="card">
+                <h2>Today's Meals</h2>
+                <div id="meal-list" class="meal-list-container">
+                    <!-- Meals will be injected here -->
+                </div>
+
+                <form id="add-meal-form" class="add-meal-form">
+                    <input type="text" id="meal-name" placeholder="Meal name (e.g., Avocado Toast)" required>
+                    <input type="number" id="meal-calories-input" placeholder="kcal" required min="1">
+                    <button type="submit" class="btn-add">Add</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const state = {
+        goal: 2500,
+        meals: [
+            { id: 1, name: 'Greek Yogurt & Granola', calories: 350, time: '8:30 AM' },
+            { id: 2, name: 'Grilled Chicken Salad', calories: 420, time: '1:15 PM' }
+        ]
+    };
+
+    const mealList = document.getElementById('meal-list');
+    const addMealForm = document.getElementById('add-meal-form');
+    const caloriesRemainingEl = document.getElementById('calories-remaining');
+    const totalConsumedEl = document.getElementById('total-consumed');
+    const progressRing = document.getElementById('progress-ring');
+    const circumference = 2 * Math.PI * 80;
+
+    progressRing.style.strokeDasharray = `${circumference} ${circumference}`;
+
+    function updateUI() {
+        // Render meals
+        mealList.innerHTML = '';
+        const totalConsumed = state.meals.reduce((sum, meal) => sum + meal.calories, 0);
+        const remaining = Math.max(0, state.goal - totalConsumed);
+
+        state.meals.forEach(meal => {
+            const mealItem = document.createElement('div');
+            mealItem.className = 'meal-item';
+            mealItem.innerHTML = `
+                <div class="meal-info">
+                    <h3>${meal.name}</h3>
+                    <p>${meal.time || 'Just now'}</p>
+                </div>
+                <div class="meal-actions">
+                    <span class="meal-calories">${meal.calories} kcal</span>
+                    <button class="btn-delete" onclick="removeMeal(${meal.id})">&times;</button>
+                </div>
+            `;
+            mealList.appendChild(mealItem);
+        });
+
+        // Update stats
+        totalConsumedEl.textContent = totalConsumed.toLocaleString();
+        caloriesRemainingEl.textContent = remaining.toLocaleString();
+
+        // Update progress ring
+        const percent = Math.min(100, (totalConsumed / state.goal) * 100);
+        const offset = circumference - (percent / 100) * circumference;
+        progressRing.style.strokeDashoffset = offset;
+    }
+
+    function addMeal(e) {
+        e.preventDefault();
+        const nameInput = document.getElementById('meal-name');
+        const calInput = document.getElementById('meal-calories-input');
+
+        const newMeal = {
+            id: Date.now(),
+            name: nameInput.value,
+            calories: parseInt(calInput.value),
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+
+        state.meals.push(newMeal);
+        updateUI();
+
+        nameInput.value = '';
+        calInput.value = '';
+    }
+
+    function removeMeal(id) {
+        state.meals = state.meals.filter(meal => meal.id !== id);
+        updateUI();
+    }
+
+    addMealForm.addEventListener('submit', addMeal);
+
+    // Initial render
+    updateUI();
+</script>
 
 </body>
 </html>
